@@ -1,0 +1,223 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Định nghĩa cấu trúc SinhVien
+struct SinhVien {
+    char mssv[20];
+    char ten[50];
+    char khoa[30];
+    char lop[10];
+    struct SinhVien* next;
+};
+
+// Định nghĩa cấu trúc DanhSachSinhVien
+struct DanhSachSinhVien {
+    struct SinhVien* head;
+};
+
+// Hàm tạo một nút SinhVien mới
+struct SinhVien* tao_sinh_vien(char mssv[], char ten[], char khoa[], char lop[]) {
+    struct SinhVien* sv = (struct SinhVien*)malloc(sizeof(struct SinhVien));
+    strcpy(sv->mssv, mssv);
+    strcpy(sv->ten, ten);
+    strcpy(sv->khoa, khoa);
+    strcpy(sv->lop, lop);
+    sv->next = NULL;
+    return sv;
+}
+
+// Hàm thêm sinh viên vào đầu danh sách
+void them_sinh_vien(struct DanhSachSinhVien* danh_sach, char mssv[], char ten[], char khoa[], char lop[]) {
+    struct SinhVien* sv_moi = tao_sinh_vien(mssv, ten, khoa, lop);
+    sv_moi->next = danh_sach->head;
+    danh_sach->head = sv_moi;
+}
+
+// Hàm kiểm tra xem MSSV đã tồn tại trong danh sách hay chưa
+int mssv_da_ton_tai(struct DanhSachSinhVien* danh_sach, char mssv[]) {
+    struct SinhVien* current = danh_sach->head;
+
+    while (current != NULL) {
+        if (strcmp(current->mssv, mssv) == 0) {
+            return 1; // MSSV đã tồn tại
+        }
+        current = current->next;
+    }
+
+    return 0; // MSSV chưa tồn tại
+}
+
+// Hàm in danh sách sinh viên
+void in_danh_sach(struct DanhSachSinhVien* danh_sach) {
+    struct SinhVien* current = danh_sach->head;
+    while (current != NULL) {
+        printf("MSSV: %s, Ten: %s, Khoa: %s, Lop: %s\n", current->mssv, current->ten, current->khoa, current->lop);
+        current = current->next;
+    }
+}
+
+// Hàm xóa sinh viên theo MSSV
+void xoa_sinh_vien(struct DanhSachSinhVien* danh_sach, char mssv_can_xoa[]) {
+    struct SinhVien* current = danh_sach->head;
+    struct SinhVien* prev = NULL;
+
+    // Xóa nút đầu nếu nó là nút cần xóa
+    if (current != NULL && strcmp(current->mssv, mssv_can_xoa) == 0) {
+        danh_sach->head = current->next;
+        free(current);
+        return;
+    }
+
+    // Tìm nút cần xóa và nút trước nó
+    while (current != NULL && strcmp(current->mssv, mssv_can_xoa) != 0) {
+        prev = current;
+        current = current->next;
+    }
+
+    // Nếu nút không tồn tại
+    if (current == NULL) {
+        printf("Khong tim thay sinh vien voi MSSV nay.\n");
+        return;
+    }
+
+    // Xóa nút
+    prev->next = current->next;
+    free(current);
+}
+
+// Hàm sắp xếp danh sách sinh viên theo tên (sắp xếp chèn)
+void sap_xep_theo_ten(struct DanhSachSinhVien* danh_sach) {
+    struct SinhVien* i, *j;
+    char temp_mssv[20], temp_ten[50], temp_khoa[30];
+
+    for (i = danh_sach->head; i != NULL; i = i->next) {
+        strcpy(temp_mssv, i->mssv);
+        strcpy(temp_ten, i->ten);
+        strcpy(temp_khoa, i->khoa);
+
+        j = i->next;
+        while (j != NULL && strcmp(temp_ten, j->ten) > 0) {
+            strcpy(i->mssv, j->mssv);
+            strcpy(i->ten, j->ten);
+            strcpy(i->khoa, j->khoa);
+
+            strcpy(j->mssv, temp_mssv);
+            strcpy(j->ten, temp_ten);
+            strcpy(j->khoa, temp_khoa);
+
+            j = j->next;
+        }
+    }
+}
+
+// Hàm tìm kiếm sinh viên theo MSSV (tìm kiếm tuyến tính)
+struct SinhVien* tim_kiem_theo_mssv(struct DanhSachSinhVien* danh_sach, char mssv_can_tim_kiem[]) {
+    struct SinhVien* current = danh_sach->head;
+
+    while (current != NULL) {
+        if (strcmp(current->mssv, mssv_can_tim_kiem) == 0) {
+            return current; // Trả về con trỏ đến sinh viên nếu tìm thấy
+        }
+        current = current->next;
+    }
+
+    // Trả về NULL nếu không tìm thấy sinh viên
+    return NULL;
+}
+// Hàm giải phóng bộ nhớ của danh sách sinh viên
+void giai_phong_bo_nho(struct DanhSachSinhVien* danh_sach) {
+    struct SinhVien* current = danh_sach->head;
+    struct SinhVien* next;
+
+    while (current != NULL) {
+        next = current->next;
+        free(current);
+        current = next;
+    }
+
+    danh_sach->head = NULL;
+}
+
+// Hàm chính
+int main() {
+    struct DanhSachSinhVien danh_sach;
+    danh_sach.head = NULL;
+
+    char mssv[20];
+    char ten[50];
+    char khoa[30];
+    char lop[10];
+    char lua_chon;
+    char mssv_can_tim_kiem[20];
+
+    while (1) {
+        printf("\n========= MENU =========\n");
+        printf("|1. Nhap sinh vien\n");
+        printf("|2. In danh sach sinh vien\n");
+        printf("|3. Sap xep sinh vien da nhap theo thu tu alphabet\n");
+        printf("|4. Xoa sinh vien theo MSSV\n");
+        printf("|5. Tim kiem sinh vien theo MSSV\n");
+        printf("|6. Thoat chuong trinh\n");
+        printf("===================\n");
+
+        printf("Moi chon chuc nang (1-6): ");
+        scanf(" %c", &lua_chon);
+
+        switch (lua_chon) {
+            case '1':
+                printf("Nhap MSSV: ");
+                scanf("%s", mssv);
+
+                // Kiểm tra xem MSSV đã tồn tại hay chưa
+                if (mssv_da_ton_tai(&danh_sach, mssv)) {
+                    printf("MSSV da ton tai. Vui long nhap lai.\n");
+                } else {
+                    printf("Nhap ten sinh vien: ");
+                    scanf("%s", ten);
+                    printf("Nhap khoa: ");
+                    scanf("%s", khoa);
+                    printf("Nhap lop: ");
+                    scanf("%s", lop);
+                    them_sinh_vien(&danh_sach, mssv, ten, khoa, lop);
+                    printf("Da them sinh vien.\n");
+                }
+                break;
+            case '2':
+                printf("\nDanh sach sinh vien:\n");
+                in_danh_sach(&danh_sach);
+                break;
+            case '3':
+                sap_xep_theo_ten(&danh_sach);
+                printf("Da sap xep danh sach theo ten.\n");
+                break;
+            case '4':
+                printf("Nhap MSSV cua sinh vien can xoa: ");
+                scanf("%s", mssv);
+                xoa_sinh_vien(&danh_sach, mssv);
+                printf("Da xoa sinh vien.\n");
+                break;
+            case '5':
+                printf("Nhap MSSV cua sinh vien can tim kiem: ");
+                scanf("%s", mssv_can_tim_kiem);
+                struct SinhVien* ket_qua_tim_kiem = tim_kiem_theo_mssv(&danh_sach, mssv_can_tim_kiem);
+
+                if (ket_qua_tim_kiem != NULL) {
+                printf("Tim thay sinh vien:\n");
+                printf("MSSV: %s, Ten: %s, Khoa: %s\n", ket_qua_tim_kiem->mssv, ket_qua_tim_kiem->ten, ket_qua_tim_kiem->khoa);
+                } else {
+                printf("Khong tim thay sinh vien voi MSSV nay.\n");
+                }
+                break;
+            case '6':
+                printf("Ket thuc chuong trinh. Cam on ban da su dung chuong trinh!\n");
+                giai_phong_bo_nho(&danh_sach);
+                exit(0);
+
+            default:
+                printf("Lua chon khong hop le. Vui long chon lai.\n");
+        }
+    }
+
+    return 0;
+}
